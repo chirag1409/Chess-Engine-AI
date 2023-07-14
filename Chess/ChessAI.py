@@ -33,11 +33,13 @@ def findBestMove(gs, validmoves):
 def findBestMoveMinMax(gs, valid_moves):
     global nextMove
     nextMove = None
-    find_move_minmax(gs, valid_moves, DEPTH, gs.whiteToMove)
+    alpha = -CHECKMATE
+    beta = CHECKMATE
+    find_move_minmax(gs, valid_moves, DEPTH, gs.whiteToMove, alpha, beta)
     return nextMove
 
 
-def find_move_minmax(gs, valid_moves, depth, whiteToMove):
+def find_move_minmax(gs, valid_moves, depth, whiteToMove, alpha, beta):
     global nextMove
     if depth == 0:
         return score_board(gs)
@@ -46,25 +48,32 @@ def find_move_minmax(gs, valid_moves, depth, whiteToMove):
         for mv in valid_moves:
             gs.make_move(mv)
             next_moves = gs.allValidMoves()
-            score = find_move_minmax(gs, next_moves, depth - 1, not whiteToMove)
+            score = find_move_minmax(gs, next_moves, depth - 1, not whiteToMove, alpha, beta)
             if score > max_score:
                 max_score = score
                 if depth == DEPTH:
                     nextMove = mv
             gs.undoMove()
+            alpha = max(alpha, score)
+            if alpha >= beta:
+                break  # Beta cutoff
         return max_score
     else:
         min_score = CHECKMATE
         for mv in valid_moves:
             gs.make_move(mv)
             next_moves = gs.allValidMoves()
-            score = find_move_minmax(gs, next_moves, depth - 1, not whiteToMove)
+            score = find_move_minmax(gs, next_moves, depth - 1, not whiteToMove, alpha, beta)
             if score < min_score:
                 min_score = score
                 if depth == DEPTH:
                     nextMove = mv
             gs.undoMove()
+            beta = min(beta, score)
+            if beta <= alpha:
+                break  # Alpha cutoff
         return min_score
+
 
 
 def score_board(gs):
@@ -84,3 +93,4 @@ def score_board(gs):
             elif sq[0] == 'b':
                 score -= piece_score[sq[1]]
     return score
+
